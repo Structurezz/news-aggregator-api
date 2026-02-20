@@ -23,7 +23,7 @@ class FetchNewsJob implements ShouldQueue
         Log::info('FetchNewsJob started – aggregating from all sources.');
 
         try {
-            // Load all tagged news sources
+        
             $sources = iterator_to_array(app()->tagged('news-fetchers'));
 
             if (empty($sources)) {
@@ -33,7 +33,7 @@ class FetchNewsJob implements ShouldQueue
 
             $aggregator = new AggregatorService($sources);
 
-            // Aggregate articles (limit per source)
+      
             $articles = $aggregator->aggregate(50);
             $totalArticles = count($articles);
 
@@ -48,7 +48,7 @@ class FetchNewsJob implements ShouldQueue
 
             foreach ($articles as $dto) {
                 try {
-                    // Only store if article doesn't exist
+                  
                     if (!$articleService->exists($dto->url)) {
                         $savedCount += $articleService->storeMany([$dto]);
                     }
@@ -64,7 +64,7 @@ class FetchNewsJob implements ShouldQueue
 
         } catch (\Throwable $e) {
             Log::error('FetchNewsJob failed: ' . $e->getMessage(), ['exception' => $e]);
-            throw $e; // allow retry
+            throw $e; 
         }
     }
 

@@ -4,55 +4,71 @@ namespace App\Services;
 
 use App\DTOs\ArticleDto;
 use App\Models\Article;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ArticleService
 {
-   
     public function exists(string $url): bool
     {
-        $urlHash = hash('sha256', $url);
-        return Article::where('url_hash', $urlHash)->exists();
+        return Article::where('url_hash', hash('sha256', $url))->exists();
     }
 
-   
     public function storeMany(array $dtos): int
     {
-        $count = 0;
+        if (empty($dtos)) {
+            return 0;
+        }
+
+        $data = [];
+        $now = now();
 
         foreach ($dtos as $dto) {
-            /** @var ArticleDto $dto */
+         
 
-            // Skip if article already exists
-            if ($this->exists($dto->url)) {
+            $url = trim($dto->url ?? '');
+            if (empty($url)) {
                 continue;
             }
 
-            // Ensure string lengths are safe for DB columns
-            $title       = mb_substr($dto->title ?? '', 0, 255);
-            $url         = mb_substr($dto->url ?? '', 0, 255);
-            $urlHash     = hash('sha256', $dto->url ?? '');
-            $imageUrl    = mb_substr($dto->image_url ?? '', 0, 1024);
-            $author      = mb_substr($dto->author ?? '', 0, 255);
-            $sourceName  = mb_substr($dto->source_name ?? '', 0, 255);
-            $category    = mb_substr($dto->category ?? '', 0, 255);
+            $urlHash = hash('sha256', $url);
 
-            // Save the article
-            Article::create([
-                'title'        => $title,
+            $data[] = [
+                'title'        => Str::limit($dto->title ?? '', 1024, '...'),
                 'description'  => $dto->description,
                 'content'      => $dto->content,
-                'url'          => $url,
+                'url'          => Str::limit($url, 2048),
                 'url_hash'     => $urlHash,
-                'image_url'    => $imageUrl,
+                'image_url'    => Str::limit($dto->image_url ?? '', 2048),
                 'published_at' => $dto->published_at,
-                'source_name'  => $sourceName,
-                'author'       => $author,
-                'category'     => $category,
-            ]);
-
-            $count++;
+                'source_name'  => Str::limit($dto->source_name ?? 'Unknown', 120),
+                'author'       => Str::limit($dto->author ?? '', 255),
+                'category'     => Str::limit($dto->category ?? '', 100),
+                'created_at'   => $now,
+                'updated_at'   => $now,
+            ];
         }
 
-        return $count;
+        if (empty($data)) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($data) {
+            $affected = 0;
+            $chunks = array_chunk($data, 500);
+
+            foreach ($chunks as $chunk) {
+                $affected += DB::table('articles')->upsert(
+                    $chunk,
+                    ['url'],
+                    [
+                        'title', 'description', 'content', 'image_url', 'published_at',
+                        'source_name', 'author', 'category', 'updated_at',
+                    ]
+                );
+            }
+
+            return $affected;
+        });
     }
 }

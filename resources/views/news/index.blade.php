@@ -46,14 +46,16 @@
                 </div>
 
                 <div class="w-full md:w-48">
-                    <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1 ml-1">Source</label>
-                    <select name="source" class="w-full py-3 bg-gray-100/50 border-transparent rounded-xl focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
-                        <option value="">All Sources</option>
-                        @foreach($sources as $source)
-                            <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>{{ ucwords(str_replace('.', ' ', $source)) }}</option>
-                        @endforeach
-                    </select>
-                </div>
+    <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1 ml-1">Source</label>
+    <select name="source" class="w-full py-3 bg-gray-100/50 border-transparent rounded-xl focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
+        <option value="">All Sources</option>
+        @foreach($sources as $source)
+            <option value="{{ $source }}" {{ request('source') == $source ? 'selected' : '' }}>
+                {{ ucwords(str_replace('.', ' ', $source)) }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
                 <div class="w-full md:w-48">
                     <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-1 ml-1">Category</label>

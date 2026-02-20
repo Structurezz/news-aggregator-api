@@ -26,10 +26,10 @@ return [
         'mysql' => [
             'driver' => 'mysql',
           
-            'host' => env('DB_HOST', 'metro.proxy.rlwy.net'),
+            'host' => env('DB_HOST', ''),
             'port' => env('DB_PORT', 20714),
-            'database' => env('DB_DATABASE', 'railway'),
-            'username' => env('DB_USERNAME', 'root'),
+            'database' => env('DB_DATABASE', ''),
+            'username' => env('DB_USERNAME', ''),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',

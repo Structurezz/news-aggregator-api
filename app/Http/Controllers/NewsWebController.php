@@ -2,35 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
+use App\Actions\Articles\GetArticlesAction;
 use Illuminate\Http\Request;
 
 class NewsWebController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, GetArticlesAction $action)
     {
-        $query = Article::query()
-            ->when($request->filled('search'), fn($q) => 
-                $q->whereFullText(['title', 'description', 'content'], $request->search)
-            )
-            ->when($request->filled('source'), fn($q) => $q->where('source_name', $request->source))
-            ->when($request->filled('category'), fn($q) => $q->where('category', $request->category))
-            ->when($request->filled('author'), fn($q) => $q->where('author', $request->author))
-            ->when($request->filled('from'), fn($q) => $q->whereDate('published_at', '>=', $request->from))
-            ->when($request->filled('to'), fn($q) => $q->whereDate('published_at', '<=', $request->to))
-            ->latest('published_at');
+        $result = $action($request); 
 
-        $articles = $query->paginate(12)->withQueryString();  
+        $articles   = $result['articles'] ?? collect([]);
+        $sources    = $result['sources'] ?? [];
+        $categories = $result['categories'] ?? [];
+        $stats      = $result['stats'] ?? [];
+        $pagination = $result['pagination'] ?? [];
 
-       
-        $sources = Article::distinct()->pluck('source_name')->filter()->values();
-        $categories = Article::distinct()->pluck('category')->filter()->values();
-
-        return view('news.index', compact('articles', 'sources', 'categories'));
-    }
-
-    public function show(Article $article)
-    {
-        return view('news.show', compact('article'));
+        return view('news.index', compact(
+            'articles',
+            'sources',
+            'categories',
+            'stats',
+            'pagination'
+        ));
     }
 }
