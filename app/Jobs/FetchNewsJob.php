@@ -27,7 +27,7 @@ class FetchNewsJob implements ShouldQueue
             $sources = iterator_to_array(app()->tagged('news-fetchers'));
 
             if (empty($sources)) {
-                Log::warning('No news-fetchers tagged – check NewsSourceServiceProvider.');
+                Log::warning('No news-fetchers tagged – check NewsSourceServiceProvider.', []);
                 return;
             }
 
@@ -36,29 +36,34 @@ class FetchNewsJob implements ShouldQueue
             // Aggregate articles (limit per source)
             $articles = $aggregator->aggregate(50);
             $totalArticles = count($articles);
-            Log::info("Aggregator returned {$totalArticles} unique articles.");
+
+            Log::info("Aggregator returned {$totalArticles} articles.");
 
             if ($totalArticles === 0) {
                 Log::info('No new articles to store.');
                 return;
             }
 
-            // Safely store articles
             $savedCount = 0;
+
             foreach ($articles as $dto) {
                 try {
-                    $savedCount += $articleService->storeMany([$dto]);
+                    // Only store if article doesn't exist
+                    if (!$articleService->exists($dto->url)) {
+                        $savedCount += $articleService->storeMany([$dto]);
+                    }
                 } catch (\Throwable $e) {
-                    Log::warning("Failed to store article '{$dto->title}': " . $e->getMessage());
+                    Log::warning(
+                        "Failed to store article '{$dto->title}' ({$dto->url})",
+                        ['exception' => $e]
+                    );
                 }
             }
 
             Log::info("FetchNewsJob completed. {$savedCount}/{$totalArticles} new articles saved.");
 
         } catch (\Throwable $e) {
-            Log::error('FetchNewsJob failed: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
+            Log::error('FetchNewsJob failed: ' . $e->getMessage(), ['exception' => $e]);
             throw $e; // allow retry
         }
     }

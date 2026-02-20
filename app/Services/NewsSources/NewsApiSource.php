@@ -6,6 +6,7 @@ use App\Contracts\NewsFetcher;
 use App\DTOs\ArticleDto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class NewsApiSource implements NewsFetcher
 {
@@ -17,28 +18,28 @@ class NewsApiSource implements NewsFetcher
             'language' => 'en',
             'sortBy'   => 'publishedAt',
             'q'        => $keyword ?: 'news OR world OR breaking OR technology OR sport',
-            'from'     => now()->subDay()->format('Y-m-d'),     // last 24 hours
+            'from'     => now()->subDay()->format('Y-m-d'),
         ];
-    
+
         $response = Http::get('https://newsapi.org/v2/everything', $query);
-    
+
         if ($response->failed()) {
-            \Log::warning('NewsAPI failed', $response->json());
+            \Log::warning('NewsAPI request failed', ['response' => $response->json()]);
             return [];
         }
-    
+
         $articles = $response->json('articles') ?? [];
-    
+
         return collect($articles)->map(fn($item) => new ArticleDto(
             title: $item['title'] ?? 'No title',
             description: $item['description'] ?? null,
             content: $item['content'] ?? null,
-            url: $item['url'],
-            image_url: $item['urlToImage'] ?? null,
-            published_at: Carbon::parse($item['publishedAt'] ?? now()),
+            url: Str::limit($item['url'], 1024),
+            image_url: isset($item['urlToImage']) ? Str::limit($item['urlToImage'], 1024) : null,
+            published_at: isset($item['publishedAt']) ? Carbon::parse($item['publishedAt']) : now(),
             source_name: $item['source']['name'] ?? 'NewsAPI',
             author: $item['author'] ?? null,
             category: 'general',
-        ))->all();
+        ))->take($limit)->all();
     }
 }
