@@ -24,7 +24,7 @@ class ArticleServiceTest extends TestCase
 
 public function it_stores_new_article_and_skips_duplicate_by_url()
 {
-    // Use named arguments, not an array
+   
     $dto = new ArticleDto(
         title: 'Unique Article',
         url: 'https://example.com/unique',

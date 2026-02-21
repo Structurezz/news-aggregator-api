@@ -23,7 +23,7 @@ class ExampleTest extends TestCase
                 public function fetchRecent(int $limit = 30, ?string $keyword = null): array
                 {
                     return [
-                        // FIX: Use named arguments, not an array
+                      
                         new ArticleDto(
                             title: 'Test Article 1',
                             url: 'https://example.com/1',
@@ -57,7 +57,7 @@ class ExampleTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function it_can_fetch_and_store_articles_via_command(): void
     {
-        // FIX: Instantiate the service first
+    
         $articleService = app(ArticleService::class);
         $initialCount = Article::count();
 
@@ -72,10 +72,10 @@ class ExampleTest extends TestCase
 
         $this->assertGreaterThan($initialCount, Article::count());
 
-        // Refresh count for the next part of the test
+    
         $currentCount = Article::count();
 
-        // Aggregate articles from the tagged fake fetchers
+   
         $aggregator = new AggregatorService(iterator_to_array(app()->tagged('news-fetchers')));
         $articles = $aggregator->aggregate(2);
 

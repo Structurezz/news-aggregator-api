@@ -6,7 +6,6 @@ use App\Contracts\NewsFetcher;
 use App\DTOs\ArticleDto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class NewsApiSource implements NewsFetcher
 {
@@ -30,16 +29,9 @@ class NewsApiSource implements NewsFetcher
 
         $articles = $response->json('articles') ?? [];
 
-        return collect($articles)->map(fn($item) => new ArticleDto(
-            title: $item['title'] ?? 'No title',
-            description: $item['description'] ?? null,
-            content: $item['content'] ?? null,
-            url: Str::limit($item['url'], 1024),
-            image_url: isset($item['urlToImage']) ? Str::limit($item['urlToImage'], 1024) : null,
-            published_at: isset($item['publishedAt']) ? Carbon::parse($item['publishedAt']) : now(),
-            source_name: $item['source']['name'] ?? 'NewsAPI',
-            author: $item['author'] ?? null,
-            category: 'general',
-        ))->take($limit)->all();
+        return collect($articles)
+            ->map(fn($item) => ArticleDto::fromNewsApi($item))
+            ->take($limit)
+            ->all();
     }
 }

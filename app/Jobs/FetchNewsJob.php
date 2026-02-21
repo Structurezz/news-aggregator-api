@@ -32,7 +32,7 @@ class FetchNewsJob implements ShouldQueue
 
             $aggregator = new AggregatorService($sources);
 
-            // 1. Aggregate everything into a DTO array
+           
             $articles = $aggregator->aggregate(50);
             
             if (empty($articles)) {
@@ -40,8 +40,7 @@ class FetchNewsJob implements ShouldQueue
                 return;
             }
 
-            // 2. Batch store everything. 
-            // The Service's upsert will handle the "exists" logic internally.
+     
             $affectedRows = $articleService->storeMany($articles);
 
             Log::info("FetchNewsJob completed. Affected rows: {$affectedRows}");

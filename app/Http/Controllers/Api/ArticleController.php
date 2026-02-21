@@ -15,7 +15,6 @@ class ArticleController extends Controller
     
         return response()->json([
             'data' => ArticleResource::collection($result['articles']),
-            // Move these out of 'meta' to match the test expectations
             'pagination' => $result['pagination'] ?? null,
             'filters' => [
                 'sources'    => $result['sources'] ?? [],
