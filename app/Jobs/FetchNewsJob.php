@@ -23,55 +23,32 @@ class FetchNewsJob implements ShouldQueue
         Log::info('FetchNewsJob started – aggregating from all sources.');
 
         try {
-        
             $sources = iterator_to_array(app()->tagged('news-fetchers'));
 
             if (empty($sources)) {
-                Log::warning('No news-fetchers tagged – check NewsSourceServiceProvider.', []);
+                Log::warning('No news-fetchers tagged.');
                 return;
             }
 
             $aggregator = new AggregatorService($sources);
 
-      
+            // 1. Aggregate everything into a DTO array
             $articles = $aggregator->aggregate(50);
-            $totalArticles = count($articles);
-
-            Log::info("Aggregator returned {$totalArticles} articles.");
-
-            if ($totalArticles === 0) {
-                Log::info('No new articles to store.');
+            
+            if (empty($articles)) {
+                Log::info('No articles retrieved from sources.');
                 return;
             }
 
-            $savedCount = 0;
+            // 2. Batch store everything. 
+            // The Service's upsert will handle the "exists" logic internally.
+            $affectedRows = $articleService->storeMany($articles);
 
-            foreach ($articles as $dto) {
-                try {
-                  
-                    if (!$articleService->exists($dto->url)) {
-                        $savedCount += $articleService->storeMany([$dto]);
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning(
-                        "Failed to store article '{$dto->title}' ({$dto->url})",
-                        ['exception' => $e]
-                    );
-                }
-            }
-
-            Log::info("FetchNewsJob completed. {$savedCount}/{$totalArticles} new articles saved.");
+            Log::info("FetchNewsJob completed. Affected rows: {$affectedRows}");
 
         } catch (\Throwable $e) {
             Log::error('FetchNewsJob failed: ' . $e->getMessage(), ['exception' => $e]);
             throw $e; 
         }
-    }
-
-    public function failed(\Throwable $exception): void
-    {
-        Log::error('FetchNewsJob permanently failed after retries: ' . $exception->getMessage(), [
-            'exception' => $exception
-        ]);
     }
 }

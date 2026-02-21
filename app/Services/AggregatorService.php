@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\NewsFetcher;
 use App\DTOs\ArticleDto;
+use Illuminate\Support\Facades\Log;
 
 class AggregatorService
 {
@@ -11,11 +12,12 @@ class AggregatorService
 
     public function __construct(array $sources = [])
     {
+       
         $this->sources = array_filter($sources, fn($s) => $s instanceof NewsFetcher);
     }
 
-  
-    public function aggregate(int $perSource = 50): array
+ 
+    public function aggregate(int $perSource = 50, ?string $keyword = null): array
     {
         $allArticles = [];
 
@@ -23,20 +25,23 @@ class AggregatorService
             $sourceName = class_basename($source);
 
             try {
-                $articles = $source->fetchRecent($perSource);
+                
+                $articles = $source->fetchRecent($perSource, $keyword);
+                
                 if (!is_array($articles)) {
-                    $articles = [];
+                    continue;
                 }
 
                 foreach ($articles as $article) {
                     if ($article instanceof ArticleDto) {
+                        
                         $allArticles[$article->url] = $article; 
                     }
                 }
             } catch (\Throwable $e) {
-              
-                \Log::error("Aggregator failed on {$sourceName}: " . $e->getMessage(), [
-                    'exception' => $e
+                Log::error("Aggregator failed on {$sourceName}: " . $e->getMessage(), [
+                    'source' => $sourceName,
+                    'trace' => $e->getTraceAsString()
                 ]);
             }
         }

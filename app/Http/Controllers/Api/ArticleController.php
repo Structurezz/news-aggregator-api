@@ -11,24 +11,15 @@ class ArticleController extends Controller
 {
     public function index(Request $request, GetArticlesAction $action)
     {
-       
         $result = $action($request);
-
-        
-        $articlesData = $result['articles'] ?? collect([]);
-        $sources      = $result['sources'] ?? [];
-        $categories   = $result['categories'] ?? [];
-        $pagination   = $result['pagination'] ?? [];
-
+    
         return response()->json([
-            'data' => ArticleResource::collection($articlesData),
-
-            'meta' => [
-                'pagination' => $pagination,
-                'filters' => [
-                    'available_sources'    => $sources,
-                    'available_categories' => $categories,
-                ],
+            'data' => ArticleResource::collection($result['articles']),
+            // Move these out of 'meta' to match the test expectations
+            'pagination' => $result['pagination'] ?? null,
+            'filters' => [
+                'sources'    => $result['sources'] ?? [],
+                'categories' => $result['categories'] ?? [],
             ],
         ]);
     }
