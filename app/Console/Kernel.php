@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->job(new \App\Jobs\FetchNewsJob)
-                 ->everyMinute()  // testing only – change to hourly later
+                 ->everyHour()  
                  ->withoutOverlapping(10)
                  ->runInBackground()
                  ->appendOutputTo(storage_path('logs/news-fetch.log'))
