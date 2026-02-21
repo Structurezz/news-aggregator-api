@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Article;
 use App\Actions\Articles\GetArticlesAction;
 use Illuminate\Http\Request;
 
@@ -24,5 +25,11 @@ class NewsWebController extends Controller
             'stats',
             'pagination'
         ));
+    }
+
+    public function show(Article $article)
+    {
+     
+        return view('news.show', compact('article'));
     }
 }
