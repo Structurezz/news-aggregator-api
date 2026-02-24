@@ -3,7 +3,7 @@
 
 **Position:** Backend End Engineer 
 **Candidate:** Michael Orizu
-**GitHub:** github.com/johndoe-news-aggregator   
+**GitHub:** (https://github.com/Structurezz/news-aggregator-api.git)  
 **Submission Date:** February 20, 2026
 
 This is a **complete, production-ready Laravel backend** for a news aggregator platform.  
